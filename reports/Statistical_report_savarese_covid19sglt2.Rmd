@@ -1,0 +1,279 @@
+---
+title: 'Statistical report: Covid-19 vs sglt2i/glp1a/dpp4i'
+subtitle: 'DRAFT'
+author: 'Statistician: Lina Benson'
+  
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    fig_caption: yes
+    fig_height: 7
+    fig_width: 7
+    number_sections: yes
+link-citations: yes
+bibliography: references.bib
+nocite: '@*'
+header-includes:
+   - \usepackage{draftwatermark}
+---
+
+\newpage 
+\tableofcontents 
+\listoftables
+\listoffigures
+\newpage
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, include = TRUE, comment = "",
+  warning = FALSE, message = FALSE, fig.pos = "H",
+  fig.path = "../output/figs/"
+)
+options(knitr.kable.NA = "")
+```
+
+```{r adjust_directory_if_needed, include=FALSE}
+# Uncomment lines below if rmd file is placed in a subdirectory
+knitr::opts_knit$set(root.dir = normalizePath("../"))
+```
+
+```{r load_project}
+# 1. Set options in config/global.dcf
+# 2. Load packages listed in config/global.dcf
+# 3. Import functions and code in lib directory
+
+ProjectTemplate::reload.project()
+
+cacheon <- TRUE
+```             
+
+# Data handling
+
+## Data sources
+
+### SCB
+
+Län (Stockholm), civil status and family type are from RTB as of 2019-12-31. 
+Age, sex, country of birth and number of children is also from 2019-12-31.
+Disposable income and education are from LISA 2018. Age is from 2018 in the 
+negative control analyses (see below). 
+
+### Socialstyrelsen
+
+Comorbidities and covid-19 outcome are derived from the National Patient Registry 
+(in-patient or out-patient) from 1997 (1998 Skåne) 
+and treatments from the Dispensed Drug Registry. 
+
+Note that data after 2018 is preliminary for the National Patient Registry and 
+Cause of Death Registry. From Socialstyrelsens homepage:
+"Patientregistret kommer göras tillgängligt för utlämnanden för forskningsprojekt
+och statistikbeställningar redan en eller två månader efter referensmånaden. De
+data som görs tillgängliga kommer delvis vara ofullständiga, framför allt
+kommer det med hög sannolikhet att saknas diagnoskoder för delar av
+materialet. Regionala skillnader avseende kvalitet kommer därför att finnas i de
+data som görs tillgängliga. Fullständiga data i patientregistret beräknas finnas tre
+månader efter rapporterad period.
+Dödsorsaksintyg för dödsfall som är relaterade till covid-19 kommer kodas med
+förtur, så att data om sådana dödsfall kommer vara tillgängliga cirka fyra veckor
+efter dödsfallet"
+
+Information from handläggare at Socialstyrelsen via e-mail: 
+"patientregistret slutenvård år 2020 kan det finnas pågående vårdtillfällen 
+(dvs. vårdtillfällen utan  utskrivningsdatum). Jag vet inte hur ni hanterar 
+dessa, men det kan vara bra för dig att veta. Eftersom diagnos ofta fastställt 
+vid utskrivning kan diagnoserna på dessa vårdtillfällen vara lite ”skakiga”. 
+
+## Time period
+
+Index date is defined as `r global_indexdtm` (first covid-19 case in Sweden end Jan). 
+End of follow-up is defined as `r global_enddtm`, 
+decision based on visual inspection of patterns in NPR and Cause of Death Registry data.
+
+## Population 
+
+The population received from Socialstyrelsens consisted of persons with any of the following: 
+hypertension, diabetes, ischemic heart disease, heart failure, kidney disease, obesity or af 
+(ICD codes in Table \ref{tab:outcomcodes}) defined 
+from the NPR (in-patient or out-patient) from 1997 (1998 Skåne) and alive 2020-01-01. 
+
+\clearpage
+\newpage
+
+```{r flow}
+mykable(flow, caption = "Flowchart", scale_down = F)
+```
+
+The median age (IQR) is `r pop %>% summarise(med = dF(median(scb_age), dig = 1),
+                                             q1 = dF(quantile(scb_age, probs = 0.25), dig = 1),
+                                             q3 = dF(quantile(scb_age, probs = 0.75), dig = 1)) %>%
+                                   mutate(out = paste0(med, " (", q1, "-", q3, ")")) %>%
+                                   pull(out)` and 
+`r pop %>% count(scb_sex) %>%
+  mutate(perc = dF(n / sum(n) * 100, 1)) %>%
+  filter(scb_sex == "Female") %>%
+  pull(perc)`% females.                                   
+
+## Created variables 
+
+```{r outcomcodes}
+mykable(metaout, caption = "Comorbidities and outcomes from NPR")
+```
+
+```{r atc}
+mykable(metalm, caption = "Treatments from DDR")
+```
+
+Time on treatment is calculated as time from first (from 1 July 2005, start of DDR) 
+to last  + 3 months (prior to `r global_indexdtm`) dispensed prescription for the respective treatment.
+
+### Outcome Covid-19
+
+The outcome is defined as hospitalized (in-patient) confirmed covid-19 (U071) as main 
+diagnosis (HDIA) in the National Patient Registry OR as confirmed covid-19 (U071)
+as underlying cause of death (ULORSAK) in Cause of Death Registry. 
+
+```{r, child = "../src/deskstatcovid.Rmd"}
+
+```
+
+# Statistical analysis 
+
+## General
+
+All analyses were performed using `r sessionInfo()$R.version$version.string` [@r]. 
+The level of significance is set to 5%, two-sided. No adjustment for multiple 
+comparisons were made and therefore the results should be viewed with care.
+
+## Missing data
+
+There was missing data for some of the scb variables (not sex, age, number of children). 
+Patients with missing data are excluded from all analysis. 
+
+## Propensity scores and matching
+
+A propensity score for treatment with sglt2i, glp1a and dpp4i respectively was estimated for 
+each patient with logistic regression with variables indicated in Table \ref{tab:tab1allsglt2match}, partly in 
+all patients, partly in the patients with covid-19. Continuous variables (age) 
+were modelled using cubic splines with 4 dfs. 
+
+1:1 matching without replacement [@match] was thereafter performed where the propensity 
+score was allowed to differ by 0.01 or less. The ability of the ps 
+matching to balance the baseline characteristics was assessed by 
+standardized mean differences.  
+
+1:1 has deemed the best option when taking into account the number of patients retained.
+
+## Baseline characteristics
+
+```{r, child = "../src/tab1match.Rmd"}
+
+```
+
+\clearpage
+\newpage
+
+## Covid-19
+
+The association between sglt2i, glp1a and dpp4i separately and Covid-19 was investigated 
+using the modified Poisson regression approach [@gee], i.e. using 
+Generalized Estimating Equations (GEE) models with a Poisson distribution and a robust error variance, 
+for the following models: 
+
+- Crude
+- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match} 
+- In the matched cohort, so therefore adjusted for the same variables as above
+
+In the model for the matched cohort the matched pairs were modelled using an exchangeable correlation structure. 
+
+The association in predefined subgroups were investigated using interaction effects.
+
+### Consistency analysis
+
+#### Competing risk
+
+The analyses were also performed using a sub-distributional hazards model [@fg] 
+were death was treated as a competing event.
+
+For the main analysis censoring is not incorporated in the model since this also 
+introduces time as a factor which is probably more due to spread of disease. 
+
+#### Incident user 
+
+The analyses were also performed were patients collecting prescriptions within 1 year 
+prior to the 5 month period defining if the patient is a treatment user were excluded from the analysis, 
+thus only including incident users [@iu]. Note that also patients in the non-treatment group can 
+be excluded if they have a dispensed prescription during this period. 
+
+\clearpage
+\newpage
+
+```{r, child = "../src/outcovidtab.Rmd"}
+
+```
+
+\clearpage
+\newpage
+
+## All-cause mortality after Covid-19
+
+```{r, child = "../src/deskstatdeaths.Rmd"}
+
+```
+
+The time to all-casues mortality is presented in 1-KM curves for the matched population.
+
+The association between treatments and all-cause mortality after Covid-19 was 
+investigated using cox regression for the following models: 
+
+- Crude
+- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match} 
+- In the matched cohort, so therefore adjusted for the same variables as above
+
+In the model for the matched cohort the matched pairs were incorporated in the 
+model with a strata term. 
+
+The association in predefined subgroups were investigated using interaction effects.
+
+Only patients with Covid-19 were included in the models. 
+
+### Assumptions
+
+The proportional hazards assumption was investigated using the scaled Schoenfeld 
+residuals (cox.zph in [@survival-package]) for the matched models. 
+Possible outliers were visually inspected by plotting the dfbetas. 
+=> No action deemed necessary. 
+
+\clearpage
+\newpage
+
+```{r, child = "../src/km.Rmd"}
+
+```
+
+```{r, child = "../src/outtab.Rmd"}
+
+```
+
+\clearpage
+\newpage
+
+# Reproducibility
+
+## R session information {#sessioninfo}
+
+`r sessionInfo()$R.version$version.string` [@r] is used, for more details see below.
+
+```{r sessinfo}
+sessionInfo()
+```
+
+## R code
+
+The R code for all data handling and statistical analyses are found: 
+https://github.com/KIHeartFailure/covid19sglt2i. On publication 
+the repository will be made public so as to 
+link to it from the resulting article for increased transparency and code sharing.
+No data or output is stored in the repository. 
+
+# References

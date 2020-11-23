@@ -1,0 +1,27 @@
+```{r deskstatcovid}
+
+deskstat <- c(
+  "N Covid-19 cases",
+  pop %>% filter(sos_covidconfirmed == "Yes") %>% count() %>% pull(n)
+)
+
+deskstat <- rbind(deskstat, c(
+  "whereof found ONLY in in-patient NPR HDIA",
+  pop %>% filter(sos_out_hospcovidconfirmed == "Yes" & sos_deathcovidconfulorsak == "No") %>% count() %>% pull(n)
+))
+
+deskstat <- rbind(deskstat, c(
+  "whereof found ONLY in Cause of Death Registry ULORSAK",
+  pop %>% filter(sos_out_hospcovidconfirmed == "No" & sos_deathcovidconfulorsak == "Yes") %>% count() %>% pull(n)
+))
+
+deskstat <- rbind(deskstat, c(
+  "whereof found BOTH in NPR and Cause of Death Registry",
+  pop %>% filter(sos_out_hospcovidconfirmed == "Yes" & sos_deathcovidconfulorsak == "Yes") %>% count() %>% pull(n)
+))
+
+mykable(deskstat,
+  caption = "Data sources of captured Covid cases",
+  scale_down = FALSE
+)
+```

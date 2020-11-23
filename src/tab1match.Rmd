@@ -1,0 +1,135 @@
+```{r tab1match, cache=cacheon}
+
+tab1func <- function(data, datamatch, stratavar, title) {
+  tab1m <- print(CreateTableOne(
+    vars = tabvars,
+    strata = stratavar,
+    data = datamatch
+  ),
+  missing = FALSE, printToggle = FALSE,
+  nonnormal = tabvars,
+  test = TRUE,
+  catDigits = 1, contDigits = 1,
+  explain = FALSE,
+  smd = TRUE,
+  noSpaces = TRUE
+  )
+  tab1m <- data.frame(tab1m) %>%
+    rownames_to_column(var = "Variable") %>%
+    select(Variable, No, Yes, p, SMD)
+
+  tab1a <- print(CreateTableOne(
+    vars = tabvars,
+    strata = stratavar,
+    data = data
+  ),
+  missing = FALSE, printToggle = FALSE,
+  nonnormal = tabvars,
+  test = TRUE,
+  catDigits = 1, contDigits = 1,
+  explain = FALSE,
+  smd = TRUE,
+  noSpaces = TRUE
+  )
+  tab1a <- data.frame(tab1a) %>%
+    rownames_to_column(var = "Variable") %>%
+    select(Variable, No, Yes, p, SMD)
+
+  tab1 <- full_join(tab1a,
+    tab1m,
+    by = "Variable"
+  ) %>%
+    # remove NA
+    mutate(across(everything(), str_replace_all, fixed("NA [NA, NA]"), "-")) %>%
+    mutate(across(everything(), str_replace_all, fixed("NaN"), "-")) %>%
+    mutate(across(everything(), str_replace_all, fixed("NA"), "-")) %>%
+    # remove = Yes
+    mutate(across(everything(), str_replace_all, fixed(" = Yes"), ""))
+
+  write.xlsx(tab1, paste0("./output/tabs/tab1_", title, Sys.Date(), ".xlsx"), rowNames = FALSE)
+
+  # footnotes
+  tab1 <- tab1 %>%
+    mutate(
+      var_tmp = str_split(Variable, " = ", simplify = TRUE)[, 1],
+      footnote1 = if_else(var_tmp %in% c(modvars, "sos_ddr_sglt2", "sos_ddr_glp1a", "sos_ddr_dpp4i"),
+        footnote_marker_symbol(1), ""
+      ),
+      footnote2 = if_else(str_detect(Variable, "^covidperiod"), footnote_marker_symbol(2), ""),
+      footnote3 = if_else(str_detect(Variable, "^scb_dispincome_cat"), footnote_marker_symbol(3), "")
+    ) %>%
+    unite(footnote, starts_with("footnote"), sep = "") %>%
+    mutate(
+      # so no probs
+      Variable = sanitize_text(Variable),
+
+      Variable = paste0(Variable, footnote),
+
+      # space in Latex output (fix this other way?)
+      Variable = sub("  ", ". ", Variable)
+    ) %>%
+    select(-var_tmp, -footnote)
+
+
+  ## fix in order to use escape = TRUE
+  colnames(tab1) <- sanitize_text(c(
+    "Variable", rep(c("No", "Yes", "p-value", "SMD"), 2)
+  ))
+
+  myHeader <- c(" " = 1, "Overall" = 4, "Matched" = 4)
+  names(myHeader) <- c(" ", "Overall", "Matched")
+
+  footnote(
+    mykable(tab1,
+      fontsize = 6,
+      caption = paste("Baseline characteristics ", title),
+      longtable = TRUE,
+      escape = FALSE
+    ) %>%
+      landscape() %>%
+      add_header_above(myHeader),
+    general = c(
+      "Categorical variables are presented with n (%) and tested with chi-square test and continuous variables with median [q1-q3] and tested with Mann-Whitney U test.",
+      "SMD = Standardized mean difference."
+    ),
+    symbol = c(
+      "Included in the logistic/cox regression/propensity score models.",
+      "Included in  the cox regression/propensity score models for outcome death as a continuous variable.",
+      "Categorized according to tertiles."
+    )
+  )
+}
+```
+
+```{r tab1allsglt2match, cache=cacheon, dependson = "tab1match"}
+tab1func(data = pop, datamatch = match_sglt2i, stratavar = "sos_ddr_sglt2i", title = "by sglt2i")
+```
+
+```{r tab1allglp1amatch, cache=cacheon, dependson = "tab1match"}
+tab1func(data = pop, datamatch = match_glp1a, stratavar = "sos_ddr_glp1a", title = "by glp1a")
+```
+
+```{r tab1alldpp4imatch, cache=cacheon, dependson = "tab1match"}
+tab1func(data = pop, datamatch = match_dpp4i, stratavar = "sos_ddr_dpp4i", title = "by dpp4i")
+```
+
+```{r tab1covidsglt2match, cache=cacheon, dependson = "tab1match"}
+tab1func(
+  data = pop %>% filter(sos_covidconfirmed == "Yes"),
+  datamatch = match_sglt2i_cov, stratavar = "sos_ddr_sglt2i", title = "Covid-19 patients by sglt2i"
+)
+```
+
+```{r tab1covidglp1amatch, cache=cacheon, dependson = "tab1match"}
+tab1func(
+  data = pop %>% filter(sos_covidconfirmed == "Yes"),
+  datamatch = match_glp1a_cov, stratavar = "sos_ddr_glp1a", title = "Covid-19 patients by glp1a"
+)
+```
+
+```{r tab1coviddpp4imatch, cache=cacheon, dependson = "tab1match"}
+tab1func(
+  data = pop %>% filter(sos_covidconfirmed == "Yes"),
+  datamatch = match_dpp4i_cov, stratavar = "sos_ddr_dpp4i", title = "Covid-19 patients by dpp4i"
+)
+```

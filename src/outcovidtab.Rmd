@@ -1,0 +1,542 @@
+```{r outcovid, cache=cacheon}
+
+rrmy <- function(modname,
+                 matchdata,
+                 modvarsmy,
+                 sensanalysis = FALSE,
+                 fg = FALSE) {
+  if (fg) sensanalysis <- TRUE
+
+  if (!sensanalysis) {
+    out <- data.frame(matrix(NA, ncol = 12, nrow = 3, 1))
+    row <- 3
+  }
+
+  if (sensanalysis) {
+    out <- data.frame(matrix(NA, ncol = 12, nrow = 1, 1))
+    row <- 1
+  }
+  colnames(out) <- c(
+    "Patient group", "Model", "No_overall", "Yes_overall", "p-value_overall",
+    "No_matched", "Yes_matched", "p-value_matched",
+    "logrr", "loglci", "loguci", "modnameforest"
+  )
+
+  out[1, 1] <- modname
+
+  if (!sensanalysis) {
+    out[1, 2] <- "n (%) event"
+
+    ## all data
+    ns <- pop %>%
+      group_by(!!sym(modvarsmy[1])) %>%
+      count(sos_covidconfirmed) %>%
+      mutate(
+        p = n / sum(n),
+        np = paste0(n, " (", dF(p * 100, dig = 2), "%)")
+      ) %>%
+      ungroup() %>%
+      filter(sos_covidconfirmed == "Yes")
+
+    out[1, 3:4] <- ns %>% pull(np)
+
+    ## match data
+    ns <- matchdata %>%
+      group_by(!!sym(modvarsmy[1])) %>%
+      count(sos_covidconfirmed) %>%
+      mutate(
+        p = n / sum(n),
+        np = paste0(n, " (", dF(p * 100, dig = 2), "%)")
+      ) %>%
+      ungroup() %>%
+      filter(sos_covidconfirmed == "Yes")
+
+    out[1, 6:7] <- ns %>% pull(np)
+
+    # Crude
+    out[2, 2] <- "Crude RR (95% CI)"
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      modvarsmy[1]
+    )),
+    data = pop,
+    id = LopNr,
+    family = poisson("log"),
+    corstr = "independence"
+    )
+    smod <- summary(mod)
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[2, 3:4] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+
+
+    ## adj covariates
+
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      paste(modvarsmy, collapse = " + ")
+    )),
+    data = pop,
+    id = LopNr,
+    family = poisson("log"),
+    corstr = "independence"
+    )
+    smod <- summary(mod)
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[3, 3:4] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+  }
+
+  if (!fg) {
+    out[row, 2] <- "Adjusted RR (95% CI)"
+
+    ## adj matching
+
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      modvarsmy[1]
+    )),
+    data = matchdata %>% arrange(par),
+    id = par,
+    family = poisson("log"),
+    corstr = "exchangeable"
+    )
+    smod <- summary(mod)
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[row, 6:7] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+
+    if (!sensanalysis) {
+      # for forestplot
+      out[3, 12] <- out[1, 1]
+      out[3, 9:11] <- c(coeff.c, lci.c, uci.c)
+    }
+  }
+
+  if (fg) {
+    matchdata <- matchdata %>%
+      mutate(cov = if_else(!!sym(modvarsmy[1]) == "Yes", 1, 0))
+    mod <- summary(crr(matchdata %>% pull(sos_outtime_hospcovidconfirmed),
+      matchdata %>% pull(sos_covidconfirmed_cr),
+      matchdata %>% pull(cov),
+      failcode = 1, cencode = 0
+    ))
+
+    out[row, 2] <- "Adjusted HR (95% CI)"
+
+    out[row, 6:7] <- c(
+      "ref",
+      paste0(
+        dF(mod$conf.int[, 1], dig = 2),
+        " (", dF(mod$conf.int[, 3], dig = 2),
+        "-", dF(mod$conf.int[, 4], dig = 2), "), ",
+        dF(mod$coef[, 5], dig = 3, p = TRUE)
+      )
+    )
+  }
+  return(out)
+}
+
+rrmyint <- function(modname,
+                    matchdata,
+                    modvarsmy,
+                    interactionvar) {
+  rows <- c(1, 4)
+  levs <- levels(pop %>% pull(!!sym(interactionvar)))
+
+  if (length(levs) > 2) stop("> 2 levels in interaction variable")
+
+  out <- data.frame(matrix(NA, ncol = 12, nrow = 6, 1))
+  colnames(out) <- c(
+    "Patient group", "Model", "No_overall", "Yes_overall", "p-value_overall",
+    "No_matched", "Yes_matched", "p-value_matched",
+    "logrr", "loglci", "loguci", "modnameforest"
+  )
+
+  out[rows, 1] <- paste0(modname, "=", levs)
+
+  for (i in seq_along(levs)) {
+    out[rows[i], 2] <- "n (%) event"
+
+    ## all data
+
+    ns <- pop %>%
+      filter(!!sym(interactionvar) == levs[i]) %>%
+      group_by(!!sym(modvarsmy[1])) %>%
+      count(sos_covidconfirmed) %>%
+      mutate(
+        p = n / sum(n),
+        np = paste0(n, " (", dF(p * 100, dig = 2), "%)")
+      ) %>%
+      ungroup() %>%
+      filter(sos_covidconfirmed == "Yes")
+
+    out[rows[i], 3:4] <- ns %>% pull(np)
+
+    ## match data
+    ns <- matchdata %>%
+      filter(!!sym(interactionvar) == levs[i]) %>%
+      group_by(!!sym(modvarsmy[1])) %>%
+      count(sos_covidconfirmed) %>%
+      mutate(
+        p = n / sum(n),
+        np = paste0(n, " (", dF(p * 100, dig = 2), "%)")
+      ) %>%
+      ungroup() %>%
+      filter(sos_covidconfirmed == "Yes")
+
+    out[rows[i], 6:7] <- ns %>% pull(np)
+
+    # Crude
+    out[rows[i] + 1, 2] <- "Crude RR (95% CI)"
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      modvarsmy[1], " * relevel(", interactionvar, ", ref = '", levs[i], "')"
+    )),
+    data = pop,
+    id = LopNr,
+    family = poisson("log"),
+    corstr = "independence"
+    )
+    smod <- summary(mod)
+
+    out[rows[i] + 1, 5] <- dF(last(smod$coefficients$`Pr(>|W|)`), dig = 3, p = TRUE)
+
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[rows[i] + 1, 3:4] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+
+
+    # ## adj covariates
+    out[rows[i] + 2, 2] <- "Adjusted RR (95% CI)"
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      modvarsmy[1], " * relevel(", interactionvar, ", ref = '", levs[i], "') + ",
+      paste(modvarsmy, collapse = " + ")
+    )),
+    data = pop,
+    id = LopNr,
+    family = poisson("log"),
+    corstr = "independence"
+    )
+    smod <- summary(mod)
+
+    out[rows[i] + 2, 5] <- dF(last(smod$coefficients$`Pr(>|W|)`), dig = 3, p = TRUE)
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[rows[i] + 2, 3:4] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+
+
+    # adj matching
+    mod <- geeglm(formula(paste0(
+      "sos_covidconfirmed == 'Yes' ~ ",
+      modvarsmy[1], " * relevel(", interactionvar, ", ref = '", levs[i], "')"
+    )),
+    data = matchdata,
+    id = par,
+    family = poisson("log"),
+    corstr = "exchangeable"
+    )
+    smod <- summary(mod)
+
+    out[rows[i] + 2, 8] <- dF(last(smod$coefficients$`Pr(>|W|)`), dig = 3, p = TRUE)
+
+    coeff.c <- smod$coefficients$Estimate[2]
+    lci.c <- coeff.c - global_z05 * smod$coefficients$Std.err[2]
+    uci.c <- coeff.c + global_z05 * smod$coefficients$Std.err[2]
+
+    out[rows[i] + 2, 6:7] <- c(
+      "ref", paste0(
+        dF(exp(coeff.c), dig = 2),
+        " (", dF(exp(lci.c), dig = 2),
+        "-", dF(exp(uci.c), dig = 2), "), ",
+        dF(smod$coefficients$`Pr(>|W|)`[2], dig = 3, p = TRUE)
+      )
+    )
+
+    # for forestplot
+    out[rows[i] + 2, 12] <- out[rows[i], 1]
+    out[rows[i] + 2, 9:11] <- c(coeff.c, lci.c, uci.c)
+  }
+  return(out)
+}
+
+
+rrmy2 <- function(matchdata2, matchdata3, modvarsmy2) {
+  out11 <- rrmy(
+    modname = "All",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2
+  )
+  out11_iu <- rrmy(
+    modname = "All - Incident users only",
+    matchdata = matchdata3,
+    modvarsmy = modvarsmy2,
+    sensanalysis = TRUE
+  )
+  out11_fg <- rrmy(
+    modname = "All - Competing risk",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2,
+    sensanalysis = TRUE,
+    fg = TRUE
+  )
+  out12 <- rrmyint(
+    modname = "Gender",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_sex"],
+    interactionvar = "scb_sex"
+  )
+  out13 <- rrmyint(
+    modname = "Age",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "ns(scb_age, 4)"],
+    interactionvar = "scb_age_cat"
+  )
+  out14 <- rrmyint(
+    modname = "HF",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hf"],
+    interactionvar = "sos_com_hf"
+  )
+  out15 <- rrmyint(
+    modname = "Hypertension",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hypertension"],
+    interactionvar = "sos_com_hypertension"
+  )
+  out16 <- rrmyint(
+    modname = "Kidney disease",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_renal"],
+    interactionvar = "sos_com_renal"
+  )
+  out17 <- rrmyint(
+    modname = "IHD",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_ihd"],
+    interactionvar = "sos_com_ihd"
+  )
+  out18 <- rrmyint(
+    modname = "Insulin",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_insulin"],
+    interactionvar = "sos_ddr_insulin"
+  )
+  out19 <- rrmyint(
+    modname = "Metformin",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_metformin"],
+    interactionvar = "sos_ddr_metformin"
+  )
+  out20 <- rrmyint(
+    modname = "Stockholm",
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_region_stockholm"],
+    interactionvar = "scb_region_stockholm"
+  )
+
+  outrrall <- rbind(
+    out11, out11_iu, out11_fg,
+    out12, out13,
+    out14, out15, out16,
+    out17, out18, out19,
+    out20
+  )
+}
+
+rrmyprint <- function(data, title) {
+  outrralltab <- data %>% select(-logrr, -loglci, -loguci, -modnameforest)
+  colnames(outrralltab) <- c("Patient group", "Model", rep(c("No", "Yes", "p-value interation"), 2))
+
+  write.xlsx(outrralltab, paste0("./output/tabs/covid_", title, "_", Sys.Date(), ".xlsx"), rowNames = FALSE)
+
+  myHeader <- c(" " = 1, " " = 1, "Overall" = 3, "Matched" = 3)
+  names(myHeader) <- c(" ", " ", "Overall", "Matched")
+
+  footnote(
+    mykable(outrralltab,
+      fontsize = 5,
+      caption = paste0("Outcome Covid-19 ", title),
+      longtable = TRUE
+    ) %>%
+      landscape() %>%
+      add_header_above(myHeader),
+    general = c(
+      "Adjusted = In overall cohort adjusted for and in matched cohort matched on ps derived from variables indicated in baseline table.",
+      "P-value for interaction is duplicated (same p for both groups per default)"
+    )
+  )
+}
+```
+
+```{r outcovidsglt2, cache=cacheon, dependson="outcovid"}
+
+rr_sglt2i <- rrmy2(
+  matchdata2 = match_sglt2i,
+  matchdata3 = match_sglt2i_iu,
+  modvarsmy2 = c("sos_ddr_sglt2i", "sos_ddr_glp1a", "sos_ddr_dpp4i", modvarsns)
+)
+rrmyprint(rr_sglt2i, title = "sglt2i")
+```
+
+```{r outcovidglp1a, cache=cacheon, dependson="outcovid"}
+
+rr_glp1a <- rrmy2(
+  matchdata2 = match_glp1a,
+  matchdata3 = match_glp1a_iu,
+  modvarsmy2 = c("sos_ddr_glp1a", "sos_ddr_sglt2i", "sos_ddr_dpp4i", modvarsns)
+)
+rrmyprint(rr_glp1a, title = "glp1a")
+```
+
+```{r outcoviddpp4i, cache=cacheon, dependson="outcovid"}
+
+rr_dpp4i <- rrmy2(
+  matchdata2 = match_dpp4i,
+  matchdata3 = match_dpp4i_iu,
+  modvarsmy2 = c("sos_ddr_dpp4i", "sos_ddr_glp1a", "sos_ddr_sglt2i", modvarsns)
+)
+rrmyprint(rr_dpp4i, title = "dpp4i")
+```
+
+```{r rrforest, cache=cacheon}
+
+forestrrplot <- function(forestdata, xlab) {
+  cextext <- 1
+
+  outforest <- forestdata %>%
+    filter(!is.na(modnameforest)) %>%
+    mutate(modnameforforest = case_when(
+      modnameforest == "All" ~ "All",
+      modnameforest == "Gender=Female" ~ "Female gender",
+      modnameforest == "Gender=Male" ~ "Male gender",
+      modnameforest == "Age=<75" ~ "Age <75yrs",
+      modnameforest == "Age=>=75" ~ "Age >=75yrs",
+      modnameforest == "HF=No" ~ "No HF",
+      modnameforest == "HF=Yes" ~ "HF",
+      modnameforest == "Hypertension=No" ~ "No hypertension",
+      modnameforest == "Hypertension=Yes" ~ "Hypertension",
+      modnameforest == "Kidney disease=No" ~ "No kidney disease",
+      modnameforest == "Kidney disease=Yes" ~ "Kidney disease",
+      modnameforest == "IHD=No" ~ "No IHD",
+      modnameforest == "IHD=Yes" ~ "IHD",
+      modnameforest == "Insulin=No" ~ "No insulin",
+      modnameforest == "Insulin=Yes" ~ "Insulin",
+      modnameforest == "Metformin=No" ~ "No metformin",
+      modnameforest == "Metformin=Yes" ~ "Metformin",
+      modnameforest == "Stockholm=No" ~ "Not resident in Stockholm",
+      modnameforest == "Stockholm=Yes" ~ "Resident in Stockholm"
+    ))
+
+  par(mar = c(4, 18, 1, 2) + 0.2)
+  plot(rev(outforest$logrr), 1:nrow(outforest),
+    xlab = "",
+    xlim = c(
+      log(.6),
+      log(2.1)
+    ),
+    ylim = c(1, nrow(outforest) + 1),
+    axes = FALSE,
+    ylab = NA,
+    cex.lab = 1.1,
+    main = NA,
+    cex = 2,
+    type = "p",
+    pch = 22,
+    bg = global_kicols[1],
+    col = global_kicols[1]
+  )
+
+
+  for (i in 1:nrow(outforest)) {
+    matplot(c(rev(outforest$loglci)[i], rev(outforest$loguci)[i]), c(i, i),
+      type = "l", add = TRUE, col = global_kicols[1], cex = 2
+    )
+  }
+  matplot(c(0, 0), c(-1, nrow(outforest) + 0.5), type = "l", lty = 3, add = TRUE, col = "black")
+
+  axis(1,
+    cex.axis = cextext, at = log(seq(0.6, 2.1, 0.1)),
+    labels = c(0.6, NA, 0.8, NA, 1, NA, 1.2, NA, 1.4, NA, 1.6, NA, NA, NA, 2, NA)
+  )
+
+  axis(2,
+    at = 1:(nrow(outforest) + 1),
+    labels = c(rev(outforest$modnameforforest), "Patient group"),
+    cex.axis = cextext, tick = FALSE, las = 2, line = 17, hadj = 0
+  )
+
+  axis(2,
+    at = 1:(nrow(outforest) + 1),
+    labels = c(rev(outforest$Yes_matched), "Risk Ratio (95% CI)"),
+    cex.axis = cextext, tick = FALSE, las = 2, line = 3, hadj = 0.5
+  )
+
+  axis(1,
+    at = 0.05, cex.axis = cextext,
+    labels = xlab, line = 1, tick = FALSE
+  )
+  axis(1,
+    at = 0, cex.axis = cextext,
+    labels = "better", line = 2, tick = FALSE
+  )
+}
+```
+
+```{r rrplotsglt2i, cache=cacheon, dependson = c("outcovid", "rrforest"), fig.cap="Forestplot Association SGLT2i and Covid-19"}
+forestrrplot(rr_sglt2i, xlab = "SGLT2i     No SGLT2i")
+```
+
+```{r rrplotglp1, cache=cacheon, dependson = c("outcovid", "rrforest"), fig.cap="Forestplot Association GLP1a and Covid-19"}
+forestrrplot(rr_glp1a, "GLP1a     No GLP1a")
+```
+
+```{r rrplotdpp4i, cache=cacheon, dependson = c("outcovid", "rrforest"), fig.cap="Forestplot Association DPP4i and Covid-19"}
+forestrrplot(rr_dpp4i, "DPP4i     No DPP4i")
+```

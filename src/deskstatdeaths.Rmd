@@ -1,0 +1,24 @@
+```{r deskstatdeaths}
+
+deathsstat <- c(
+  "N deaths after Covid-19",
+  pop %>% filter(sos_covidconfirmed == "Yes" & sos_death == "Yes") %>% count() %>% pull(n)
+)
+
+deathsstat <- rbind(deathsstat, c(
+  "whereof with coded ULORSAK (exist in the Cause of Death Registry)",
+  pop %>% filter(sos_covidconfirmed == "Yes" & sos_death_hasulorsak == "Yes") %>% count() %>% pull(n)
+))
+
+deathsstat <- rbind(deathsstat, c(
+  "whereof have a confirmed Covid-19 as ULORSAK",
+  pop %>% filter(sos_covidconfirmed == "Yes" & sos_deathcovidconfulorsak == "Yes") %>% count() %>% pull(n)
+))
+
+footnote(mykable(deathsstat,
+  caption = "Desk stat deaths"
+), general = c(
+  "Socialstyrelsen are prioritizing coding Covid-19 deaths.",
+  "That means the probably a larger proportion of the uncoded deaths are not covid-19 compared to the coded."
+))
+```
