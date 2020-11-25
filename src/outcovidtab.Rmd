@@ -307,17 +307,11 @@ rrmyint <- function(modname,
 }
 
 
-rrmy2 <- function(matchdata2, matchdata3, modvarsmy2) {
+rrmy2 <- function(matchdata2, modvarsmy2) {
   out11 <- rrmy(
     modname = "All",
     matchdata = matchdata2,
     modvarsmy = modvarsmy2
-  )
-  out11_iu <- rrmy(
-    modname = "All - Incident users only",
-    matchdata = matchdata3,
-    modvarsmy = modvarsmy2,
-    sensanalysis = TRUE
   )
   out11_fg <- rrmy(
     modname = "All - Competing risk",
@@ -382,7 +376,7 @@ rrmy2 <- function(matchdata2, matchdata3, modvarsmy2) {
   )
 
   outrrall <- rbind(
-    out11, out11_iu, out11_fg,
+    out11, out11_fg,
     out12, out13,
     out14, out15, out16,
     out17, out18, out19,
@@ -419,7 +413,6 @@ rrmyprint <- function(data, title) {
 
 rr_sglt2i <- rrmy2(
   matchdata2 = match_sglt2i,
-  matchdata3 = match_sglt2i_iu,
   modvarsmy2 = c("sos_ddr_sglt2i", "sos_ddr_glp1a", "sos_ddr_dpp4i", modvarsns)
 )
 rrmyprint(rr_sglt2i, title = "sglt2i")
@@ -429,7 +422,6 @@ rrmyprint(rr_sglt2i, title = "sglt2i")
 
 rr_glp1a <- rrmy2(
   matchdata2 = match_glp1a,
-  matchdata3 = match_glp1a_iu,
   modvarsmy2 = c("sos_ddr_glp1a", "sos_ddr_sglt2i", "sos_ddr_dpp4i", modvarsns)
 )
 rrmyprint(rr_glp1a, title = "glp1a")
@@ -439,7 +431,6 @@ rrmyprint(rr_glp1a, title = "glp1a")
 
 rr_dpp4i <- rrmy2(
   matchdata2 = match_dpp4i,
-  matchdata3 = match_dpp4i_iu,
   modvarsmy2 = c("sos_ddr_dpp4i", "sos_ddr_glp1a", "sos_ddr_sglt2i", modvarsns)
 )
 rrmyprint(rr_dpp4i, title = "dpp4i")

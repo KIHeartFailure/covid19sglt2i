@@ -25,10 +25,6 @@ ProjectTemplate::cache("matchpop_sglt2i")
 ProjectTemplate::cache("matchpop_glp1a")
 ProjectTemplate::cache("matchpop_dpp4i")
 
-ProjectTemplate::cache("match_sglt2i_iu")
-ProjectTemplate::cache("match_glp1a_iu")
-ProjectTemplate::cache("match_dpp4i_iu")
-
 ProjectTemplate::cache("matchpop_sglt2i_cov")
 ProjectTemplate::cache("matchpop_glp1a_cov")
 ProjectTemplate::cache("matchpop_dpp4i_cov")

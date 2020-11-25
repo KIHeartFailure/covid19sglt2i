@@ -198,13 +198,6 @@ were death was treated as a competing event.
 For the main analysis censoring is not incorporated in the model since this also 
 introduces time as a factor which is probably more due to spread of disease. 
 
-#### Incident user 
-
-The analyses were also performed were patients collecting prescriptions within 1 year 
-prior to the 5 month period defining if the patient is a treatment user were excluded from the analysis, 
-thus only including incident users [@iu]. Note that also patients in the non-treatment group can 
-be excluded if they have a dispensed prescription during this period. 
-
 \clearpage
 \newpage
 

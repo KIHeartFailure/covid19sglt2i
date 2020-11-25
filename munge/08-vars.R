@@ -24,10 +24,6 @@ tabvars_not_in_mod <- c(
   "sos_ddr_glp1a",
   "sos_ddr_dpp4i",
 
-  "sos_ddr_sglt2i_iu",
-  "sos_ddr_glp1a_iu",
-  "sos_ddr_dpp4i_iu",
-  
   "sos_ddr_sglt2i_time",
   "sos_ddr_glp1a_time",
   "sos_ddr_dpp4i_time"

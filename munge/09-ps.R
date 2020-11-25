@@ -53,73 +53,6 @@ pop <- left_join(pop,
   by = "LopNr"
 ) 
 
-# All patients only incident users ------------------------------------------
-
-ps_sglt2i_iu <- glm(formula(paste0(
-  "sos_ddr_sglt2i_iu == 'Yes' ~ sos_ddr_glp1a + sos_ddr_dpp4i + ",
-  paste(modvarsns,
-    collapse = " + "
-  )
-)),
-data = pop,
-family = binomial
-)
-popps_sglt2i_iu <- bind_cols(
-  na.omit(pop %>%
-    select(LopNr, sos_ddr_sglt2i_iu)),
-  ps_sglt2i_iu = ps_sglt2i_iu$fitted
-)
-
-ps_glp1a_iu <- glm(formula(paste0(
-  "sos_ddr_glp1a_iu == 'Yes' ~ sos_ddr_sglt2i + sos_ddr_dpp4i + ",
-  paste(modvarsns,
-    collapse = " + "
-  )
-)),
-data = pop,
-family = binomial
-)
-popps_glp1a_iu <- bind_cols(
-  na.omit(pop %>%
-    select(LopNr, sos_ddr_glp1a_iu)),
-  ps_glp1a_iu = ps_glp1a_iu$fitted
-)
-
-ps_dpp4i_iu <- glm(formula(paste0(
-  "sos_ddr_dpp4i_iu == 'Yes' ~ sos_ddr_sglt2i + sos_ddr_glp1a + ",
-  paste(modvarsns,
-    collapse = " + "
-  )
-)),
-data = pop,
-family = binomial
-)
-popps_dpp4i_iu <- bind_cols(
-  na.omit(pop %>%
-    select(LopNr, sos_ddr_dpp4i_iu)),
-  ps_dpp4i_iu = ps_dpp4i_iu$fitted
-)
-
-popps <- Reduce(
-  function(...) {
-    full_join(...,
-      by = "LopNr"
-    )
-  },
-  list(popps_sglt2i_iu, popps_glp1a_iu, popps_dpp4i_iu)
-)
-
-pop <- left_join(pop,
-  popps %>%
-    select(
-      LopNr,
-      ps_sglt2i_iu,
-      ps_glp1a_iu,
-      ps_dpp4i_iu
-    ),
-  by = "LopNr"
-)
-
 # Covid-19 patients -------------------------------------------------------
 
 ps_sglt2i_cov <- glm(formula(paste0(
@@ -217,10 +150,6 @@ matchfunc <- function(var, psvar) {
 match_sglt2i <- matchfunc("sos_ddr_sglt2i", "ps_sglt2i")
 match_glp1a <- matchfunc("sos_ddr_glp1a", "ps_glp1a")
 match_dpp4i <- matchfunc("sos_ddr_dpp4i", "ps_dpp4i")
-
-match_sglt2i_iu <- matchfunc("sos_ddr_sglt2i_iu", "ps_sglt2i_iu")
-match_glp1a_iu <- matchfunc("sos_ddr_glp1a_iu", "ps_glp1a_iu")
-match_dpp4i_iu <- matchfunc("sos_ddr_dpp4i_iu", "ps_dpp4i_iu")
 
 match_sglt2i_cov <- matchfunc("sos_ddr_sglt2i", "ps_sglt2i_cov")
 match_glp1a_cov <- matchfunc("sos_ddr_glp1a", "ps_glp1a_cov")
