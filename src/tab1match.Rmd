@@ -94,7 +94,7 @@ tab1func <- function(data, datamatch, stratavar, title) {
     ),
     symbol = c(
       "Included in the logistic/cox regression/propensity score models.",
-      "Included in  the cox regression/propensity score models for outcome death as a continuous variable.",
+      "Included in  the cox regression/propensity score models for outcome death as a continuous month variable.",
       "Categorized according to tertiles."
     )
   )

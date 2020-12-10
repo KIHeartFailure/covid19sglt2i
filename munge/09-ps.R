@@ -51,7 +51,7 @@ pop <- left_join(pop,
       ps_dpp4i
     ),
   by = "LopNr"
-) 
+)
 
 # Covid-19 patients -------------------------------------------------------
 

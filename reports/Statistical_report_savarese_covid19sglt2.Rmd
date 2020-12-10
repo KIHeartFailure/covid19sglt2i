@@ -1,6 +1,5 @@
 ---
 title: 'Statistical report: Covid-19 vs sglt2i/glp1a/dpp4i'
-subtitle: 'DRAFT'
 author: 'Statistician: Lina Benson'
   
 date: "`r Sys.Date()`"
@@ -13,8 +12,6 @@ output:
 link-citations: yes
 bibliography: references.bib
 nocite: '@*'
-header-includes:
-   - \usepackage{draftwatermark}
 ---
 
 \newpage 
@@ -56,8 +53,7 @@ cacheon <- TRUE
 
 Län (Stockholm), civil status and family type are from RTB as of 2019-12-31. 
 Age, sex, country of birth and number of children is also from 2019-12-31.
-Disposable income and education are from LISA 2018. Age is from 2018 in the 
-negative control analyses (see below). 
+Disposable income and education are from LISA 2018.  
 
 ### Socialstyrelsen
 
@@ -181,10 +177,10 @@ Generalized Estimating Equations (GEE) models with a Poisson distribution and a 
 for the following models: 
 
 - Crude
-- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match} 
-- In the matched cohort, so therefore adjusted for the same variables as above
-
-In the model for the matched cohort the matched pairs were modelled using an exchangeable correlation structure. 
+- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match}. 
+Age was modelled using a cubic spline with 4 df. 
+- Adjusted through propensity score matching, using the same variables as above. 
+The matched pairs were modelled using an exchangeable correlation structure. 
 
 The association in predefined subgroups were investigated using interaction effects.
 
@@ -193,7 +189,7 @@ The association in predefined subgroups were investigated using interaction effe
 #### Competing risk
 
 The analyses were also performed using a sub-distributional hazards model [@fg] 
-were death was treated as a competing event.
+for time to Covid-19 were death from other causes was treated as a competing event.
 
 For the main analysis censoring is not incorporated in the model since this also 
 introduces time as a factor which is probably more due to spread of disease. 
@@ -214,16 +210,15 @@ introduces time as a factor which is probably more due to spread of disease.
 
 ```
 
-The time to all-casues mortality is presented in 1-KM curves for the matched population.
+The time to all-casue mortality is presented in 1-KM curves for the matched population.
 
 The association between treatments and all-cause mortality after Covid-19 was 
 investigated using cox regression for the following models: 
 
 - Crude
-- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match} 
-- In the matched cohort, so therefore adjusted for the same variables as above
-
-In the model for the matched cohort the matched pairs were incorporated in the 
+- Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match}. 
+Age was modelled using a cubic spline with 4 df.
+- Adjusted through propensity score matching, using the same variables as above. The matched pairs were incorporated in the 
 model with a strata term. 
 
 The association in predefined subgroups were investigated using interaction effects.

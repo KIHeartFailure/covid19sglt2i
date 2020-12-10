@@ -22,7 +22,7 @@ kmfunc <- function(xvar, data, xvarname, yjust = c(0, 0)) {
   # par(mar=c(4, 4, 1, 1) + 0.1)
   plot(fit,
     fun = "event",
-    ylab = "Death (%)",
+    ylab = "Death after Covid-19 (%)",
     xscale = 1,
     yscale = 100,
     col = global_kicols,

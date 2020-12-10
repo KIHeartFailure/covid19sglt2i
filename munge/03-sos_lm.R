@@ -96,5 +96,5 @@ metalm <- metalm %>%
     ATC = gsub(")", "", ATC, fixed = TRUE),
     ATC = gsub("?!", " excl.", ATC, fixed = TRUE),
     Registry = "Dispensed Drug Registry",
-    Period = "-5mo--1",
+    Period = "-5mo- -1",
   )
