@@ -3,7 +3,7 @@
 # Death -------------------------------------------------------------------
 
 dorsall <- full_join(
-  dors %>% select(LopNr, DODSDAT, AR),
+  dors %>% select(LopNr, DODSDAT, AR, ULORSAK),
   dors_cov,
   by = "LopNr",
   suffix = c("_all", "_cov")
@@ -22,6 +22,7 @@ dorsall <- full_join(
   ) %>%
   filter(!is.na(sos_deathdtm)) %>%
   mutate(
+    ULORSAK = coalesce(ULORSAK_all, ULORSAK_cov),
     sos_death = if_else(!is.na(sos_deathdtm), "Yes", "No"),
     sos_death_hasulorsak = if_else(!is.na(ULORSAK), "Yes", "No"),
     sos_deathcovidconfulorsak = if_else(stringr::str_detect(ULORSAK, "U071"), "Yes", "No")

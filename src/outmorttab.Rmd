@@ -1,0 +1,151 @@
+```{r outaftercovid, cache=cacheon}
+
+rrmy2 <- function(matchdata2, modvarsmy2) {
+  out11 <- rrmy(
+    outvar = "sos_out_death30d",
+    modname = "All",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2
+  )
+  out12 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Gender",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_sex"],
+    interactionvar = "scb_sex"
+  )
+  out13 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Age",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "ns(scb_age, 4)"],
+    interactionvar = "scb_age_cat"
+  )
+  out14 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "HF",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hf"],
+    interactionvar = "sos_com_hf"
+  )
+  out15 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Hypertension",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hypertension"],
+    interactionvar = "sos_com_hypertension"
+  )
+  out16 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Kidney disease",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_renal"],
+    interactionvar = "sos_com_renal"
+  )
+  out17 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "IHD",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_ihd"],
+    interactionvar = "sos_com_ihd"
+  )
+  out17b <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Obesity",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_obesity"],
+    interactionvar = "sos_com_obesity"
+  )
+  out18 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Insulin",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_insulin"],
+    interactionvar = "sos_ddr_insulin"
+  )
+  out19 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Metformin",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_metformin"],
+    interactionvar = "sos_ddr_metformin"
+  )
+  out20 <- rrmyint(
+    outvar = "sos_out_death30d",
+    modname = "Stockholm",
+    pop %>% filter(!is.na(sos_out_death30d)),
+    matchdata = matchdata2,
+    modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_region_stockholm"],
+    interactionvar = "scb_region_stockholm"
+  )
+
+  outrrall <- rbind(
+    out11,
+    out12, out13,
+    out14, out15, out16,
+    out17, out17b, out18, out19,
+    out20
+  )
+}
+
+rrmyprint <- function(data, title) {
+  outrralltab <- data %>% select(-logrr, -loglci, -loguci, -modnameforest)
+  colnames(outrralltab) <- c("Patient group", "Model", rep(c("No", "Yes", "p-value interation"), 2))
+
+  write.xlsx(outrralltab, paste0("./output/tabs/deathaftercovid_", title, "_", Sys.Date(), ".xlsx"), rowNames = FALSE)
+
+  myHeader <- c(" " = 1, " " = 1, "Overall" = 3, "Matched" = 3)
+  names(myHeader) <- c(" ", " ", "Overall", "Matched")
+
+  footnote(
+    mykable(outrralltab,
+      fontsize = 5,
+      caption = paste0("Outcome all-cause mortality within 30 days after Covid-19 ", title),
+      longtable = TRUE
+    ) %>%
+      landscape() %>%
+      add_header_above(myHeader),
+    general = c(
+      "Adjusted = In overall cohort adjusted for and in matched cohort matched on ps derived from variables indicated in baseline table.",
+      "P-value for interaction is duplicated (same p for both groups per default)"
+    )
+  )
+}
+```
+
+```{r outaftercovidsglt2, cache=cacheon, dependson="outaftercovid"}
+
+rr_sglt2i <- rrmy2(
+  matchdata2 = match_sglt2i_cov,
+  modvarsmy2 = c("sos_ddr_sglt2i", "sos_ddr_glp1a", "sos_ddr_dpp4i", "covidmonthyear", modvarsns)
+)
+rrmyprint(rr_sglt2i, title = "sglt2i")
+```
+
+```{r outaftercovidglp1a, cache=cacheon, dependson="outaftercovid"}
+
+rr_glp1a <- rrmy2(
+  matchdata2 = match_glp1a_cov,
+  modvarsmy2 = c("sos_ddr_glp1a", "sos_ddr_sglt2i", "sos_ddr_dpp4i", "covidmonthyear", modvarsns)
+)
+rrmyprint(rr_glp1a, title = "glp1a")
+```
+
+```{r outaftercoviddpp4i, cache=cacheon, dependson="outaftercovid"}
+
+rr_dpp4i <- rrmy2(
+  matchdata2 = match_dpp4i_cov,
+  modvarsmy2 = c("sos_ddr_dpp4i", "sos_ddr_glp1a", "sos_ddr_sglt2i", "covidmonthyear", modvarsns)
+)
+rrmyprint(rr_dpp4i, title = "dpp4i")
+```

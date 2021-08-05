@@ -18,10 +18,14 @@ pop <- pop %>%
       TRUE ~ as.Date(NA)
     ),
 
-    covidmonth = month(coviddtm),
+    tmp_covidmonth = month(coviddtm),
+    tmp_covidyear = year(coviddtm),
+    covidmonthyear = case_when(tmp_covidyear == 2020 ~ tmp_covidmonth, 
+                               tmp_covidyear == 2021 ~ 12 + tmp_covidmonth),
     covidperiod = case_when(
-      covidmonth <= 5 ~ "Feb-May",
-      covidmonth > 5 ~ "Jun-"
+      covidmonthyear <= 6 ~ "Feb-Jun 2020",
+      covidmonthyear <= 12 ~ "Jul-Dec 2020", 
+      covidmonthyear > 12 ~ "Jan-May 2021", 
     ),
 
     sos_covidconfirmed = if_else(sos_deathcovidconfulorsak == "Yes" |
@@ -51,7 +55,14 @@ pop <- pop %>%
       TRUE ~ as.numeric(censdtm - coviddtm)
     ),
     sos_outtime_death = if_else(sos_outtime_death < 0, 0, sos_outtime_death),
-    # sos_outtime_death = sos_outtime_death + 1, # if found in CDR or die on same day as hosp will otherwise have 0 days fu
+    
+    # death within 30 days 
+    sos_out_death30d = case_when(
+      sos_covidconfirmed == "No" ~ NA_character_, # patients without covid, exclude 
+      coviddtm > global_enddtm - 30 ~ NA_character_, # not 30 days follow-up, exclude
+      sos_outtime_death <= 30 & sos_death == "Yes" ~ "Yes",
+      TRUE ~ "No"
+    ), 
     
     # for competing risk analysis for outcome covid
     sos_covidconfirmed_cr = case_when(
@@ -64,7 +75,7 @@ pop <- pop %>%
     LopNr,
     indexdtm,
     coviddtm,
-    covidmonth,
+    covidmonthyear,
     covidperiod,
     censdtm,
     contains("scb_"),

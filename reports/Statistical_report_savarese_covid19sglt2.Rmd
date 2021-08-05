@@ -204,42 +204,33 @@ introduces time as a factor which is probably more due to spread of disease.
 \clearpage
 \newpage
 
-## All-cause mortality after Covid-19
+## All-cause mortality within 30 days after Covid-19
 
 ```{r, child = "../src/deskstatdeaths.Rmd"}
 
 ```
 
-The time to all-casue mortality is presented in 1-KM curves for the matched population.
-
-The association between treatments and all-cause mortality after Covid-19 was 
-investigated using cox regression for the following models: 
+The association between treatments and all-cause mortality within 30 days after Covid-19 was 
+investigated in a similar manner, 
+using the modified Poisson regression approach [@gee], i.e. using 
+Generalized Estimating Equations (GEE) models with a Poisson distribution 
+and a robust error variance for the following models: 
 
 - Crude
 - Adjusted for the individual variables indicated in Table \ref{tab:tab1allsglt2match}. 
 Age was modelled using a cubic spline with 4 df.
-- Adjusted through propensity score matching, using the same variables as above. The matched pairs were incorporated in the 
-model with a strata term. 
+- Adjusted through propensity score matching, using the same variables as above. 
+The matched pairs were modelled using an exchangeable correlation structure. 
 
 The association in predefined subgroups were investigated using interaction effects.
 
-Only patients with Covid-19 were included in the models. 
-
-### Assumptions
-
-The proportional hazards assumption was investigated using the scaled Schoenfeld 
-residuals (cox.zph in [@survival-package]) for the matched models. 
-Possible outliers were visually inspected by plotting the dfbetas. 
-=> No action deemed necessary. 
+Only patients with Covid-19 and 30 days of follow-up (i.e. patients with Covid-19 
+diagnosis prior to `r global_indexdtm - 30`) were included in the models. 
 
 \clearpage
 \newpage
 
-```{r, child = "../src/km.Rmd"}
-
-```
-
-```{r, child = "../src/outtab.Rmd"}
+```{r, child = "../src/outmorttab.Rmd"}
 
 ```
 

@@ -57,7 +57,7 @@ pop <- left_join(pop,
 
 ps_sglt2i_cov <- glm(formula(paste0(
   "sos_ddr_sglt2i == 'Yes' ~ sos_ddr_glp1a + sos_ddr_dpp4i + ",
-  paste(c(modvarsns, "covidmonth"),
+  paste(c(modvarsns, "covidmonthyear"),
     collapse = " + "
   )
 )),
@@ -67,7 +67,7 @@ family = binomial
 
 ps_glp1a_cov <- glm(formula(paste0(
   "sos_ddr_glp1a == 'Yes' ~ sos_ddr_sglt2i + sos_ddr_dpp4i + ",
-  paste(c(modvarsns, "covidmonth"),
+  paste(c(modvarsns, "covidmonthyear"),
     collapse = " + "
   )
 )),
@@ -77,7 +77,7 @@ family = binomial
 
 ps_dpp4i_cov <- glm(formula(paste0(
   "sos_ddr_dpp4i == 'Yes' ~ sos_ddr_sglt2i + sos_ddr_glp1a + ",
-  paste(c(modvarsns, "covidmonth"),
+  paste(c(modvarsns, "covidmonthyear"),
     collapse = " + "
   )
 )),

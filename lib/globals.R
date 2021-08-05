@@ -22,4 +22,4 @@ global_z05 <- qnorm(1 - 0.025)
 global_indexdtm = ymd("2020-02-01") 
 
 # end date
-global_enddtm = ymd("2020-10-15")
+global_enddtm = ymd("2021-05-15")

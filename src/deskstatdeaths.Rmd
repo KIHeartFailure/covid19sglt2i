@@ -2,17 +2,17 @@
 
 deathsstat <- c(
   "N deaths after Covid-19",
-  pop %>% filter(sos_covidconfirmed == "Yes" & sos_death == "Yes") %>% count() %>% pull(n)
+  pop %>% filter(sos_out_death30d == "Yes") %>% count() %>% pull(n)
 )
 
 deathsstat <- rbind(deathsstat, c(
   "whereof with coded ULORSAK (exist in the Cause of Death Registry)",
-  pop %>% filter(sos_covidconfirmed == "Yes" & sos_death_hasulorsak == "Yes") %>% count() %>% pull(n)
+  pop %>% filter(sos_out_death30d == "Yes" & sos_death_hasulorsak == "Yes") %>% count() %>% pull(n)
 ))
 
 deathsstat <- rbind(deathsstat, c(
   "whereof have a confirmed Covid-19 as ULORSAK",
-  pop %>% filter(sos_covidconfirmed == "Yes" & sos_deathcovidconfulorsak == "Yes") %>% count() %>% pull(n)
+  pop %>% filter(sos_out_death30d == "Yes" & sos_deathcovidconfulorsak == "Yes") %>% count() %>% pull(n)
 ))
 
 footnote(mykable(deathsstat,
