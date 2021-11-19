@@ -40,7 +40,7 @@ pop <- create_sosvar(
   type = "com",
   starttime = -1,
   name = "diabetes",
-  diakod = " E1[0-4]",
+  diakod = " E11",
   valsclass = "num",
   warnings = FALSE
 )

@@ -8,7 +8,7 @@ flow <- c(
 pop <- pop %>%
   filter(sos_com_diabetes == "Yes")
 
-flow <- rbind(flow, c(paste0("Include patients with diabetes 1997/1998-01-01 -- ", global_indexdtm), nrow(pop)))
+flow <- rbind(flow, c(paste0("Include patients with diabetes type II 1997/1998-01-01 -- ", global_indexdtm), nrow(pop)))
 
 pop <- pop %>%
   filter(is.na(sos_deathdtm) | sos_deathdtm >= ymd(global_indexdtm))
@@ -43,3 +43,6 @@ flow <- rbind(flow, c("Exclude patients with missing data for SCB variables incl
 
 pop <- pop %>%
   select(-scb_emigrated, -scb_immigratedpost2015, -scb_atersenpnr)
+
+flow <- rbind(flow, c(".  Patients with Covid-19 and 30 days follow-up", 
+                      nrow(pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)))))

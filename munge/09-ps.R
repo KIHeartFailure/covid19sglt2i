@@ -61,7 +61,7 @@ ps_sglt2i_cov <- glm(formula(paste0(
     collapse = " + "
   )
 )),
-data = pop %>% filter(sos_covidconfirmed == "Yes"),
+data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
 family = binomial
 )
 
@@ -71,7 +71,7 @@ ps_glp1a_cov <- glm(formula(paste0(
     collapse = " + "
   )
 )),
-data = pop %>% filter(sos_covidconfirmed == "Yes"),
+data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
 family = binomial
 )
 
@@ -81,13 +81,13 @@ ps_dpp4i_cov <- glm(formula(paste0(
     collapse = " + "
   )
 )),
-data = pop %>% filter(sos_covidconfirmed == "Yes"),
+data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
 family = binomial
 )
 
 popps_cov <- bind_cols(
   na.omit(pop %>%
-    filter(sos_covidconfirmed == "Yes") %>%
+    filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)) %>%
     select(LopNr, !!!syms(modvars))),
   ps_sglt2i_cov = ps_sglt2i_cov$fitted,
   ps_glp1a_cov = ps_glp1a_cov$fitted,

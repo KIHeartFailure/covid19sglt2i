@@ -4,14 +4,14 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out11 <- rrmy(
     outvar = "sos_out_death30d",
     modname = "All",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2
   )
   out12 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Gender",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_sex"],
     interactionvar = "scb_sex"
@@ -19,7 +19,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out13 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Age",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "ns(scb_age, 4)"],
     interactionvar = "scb_age_cat"
@@ -27,7 +27,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out14 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "HF",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hf"],
     interactionvar = "sos_com_hf"
@@ -35,7 +35,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out15 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Hypertension",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_hypertension"],
     interactionvar = "sos_com_hypertension"
@@ -43,7 +43,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out16 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Kidney disease",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_renal"],
     interactionvar = "sos_com_renal"
@@ -51,7 +51,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out17 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "IHD",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_ihd"],
     interactionvar = "sos_com_ihd"
@@ -59,7 +59,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out17b <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Obesity",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_com_obesity"],
     interactionvar = "sos_com_obesity"
@@ -67,7 +67,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out18 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Insulin",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_insulin"],
     interactionvar = "sos_ddr_insulin"
@@ -75,7 +75,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out19 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Metformin",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "sos_ddr_metformin"],
     interactionvar = "sos_ddr_metformin"
@@ -83,7 +83,7 @@ rrmy2 <- function(matchdata2, modvarsmy2) {
   out20 <- rrmyint(
     outvar = "sos_out_death30d",
     modname = "Stockholm",
-    pop %>% filter(!is.na(sos_out_death30d)),
+    pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
     matchdata = matchdata2,
     modvarsmy = modvarsmy2[!modvarsmy2 %in% "scb_region_stockholm"],
     interactionvar = "scb_region_stockholm"

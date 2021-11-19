@@ -115,21 +115,21 @@ tab1func(data = pop, datamatch = match_dpp4i, stratavar = "sos_ddr_dpp4i", title
 
 ```{r tab1covidsglt2match, cache=cacheon, dependson = "tab1match"}
 tab1func(
-  data = pop %>% filter(sos_covidconfirmed == "Yes"),
-  datamatch = match_sglt2i_cov, stratavar = "sos_ddr_sglt2i", title = "Covid-19 patients by sglt2i"
+  data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
+  datamatch = match_sglt2i_cov, stratavar = "sos_ddr_sglt2i", title = "Covid-19 patients with 30 days follow-up by sglt2i"
 )
 ```
 
 ```{r tab1covidglp1amatch, cache=cacheon, dependson = "tab1match"}
 tab1func(
-  data = pop %>% filter(sos_covidconfirmed == "Yes"),
-  datamatch = match_glp1a_cov, stratavar = "sos_ddr_glp1a", title = "Covid-19 patients by glp1a"
+  data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
+  datamatch = match_glp1a_cov, stratavar = "sos_ddr_glp1a", title = "Covid-19 patients with 30 days follow-up by glp1a"
 )
 ```
 
 ```{r tab1coviddpp4imatch, cache=cacheon, dependson = "tab1match"}
 tab1func(
-  data = pop %>% filter(sos_covidconfirmed == "Yes"),
-  datamatch = match_dpp4i_cov, stratavar = "sos_ddr_dpp4i", title = "Covid-19 patients by dpp4i"
+  data = pop %>% filter(sos_covidconfirmed == "Yes" & !is.na(sos_out_death30d)),
+  datamatch = match_dpp4i_cov, stratavar = "sos_ddr_dpp4i", title = "Covid-19 patients with 30 days follow-up by dpp4i"
 )
 ```
