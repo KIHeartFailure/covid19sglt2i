@@ -61,7 +61,7 @@ Comorbidities and covid-19 outcome are derived from the National Patient Registr
 (in-patient or out-patient) from 1997 (1998 Skåne) 
 and treatments from the Dispensed Drug Registry. 
 
-Note that data after 2018 is preliminary for the National Patient Registry and 
+Note that data for 2021 is preliminary for the National Patient Registry and 
 Cause of Death Registry. From Socialstyrelsens homepage:
 "Patientregistret kommer göras tillgängligt för utlämnanden för forskningsprojekt
 och statistikbeställningar redan en eller två månader efter referensmånaden. De
