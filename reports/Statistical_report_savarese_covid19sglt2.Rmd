@@ -234,6 +234,29 @@ diagnosis prior to `r global_indexdtm - 30`) were included in the models.
 
 ```
 
+## Hypoglycemia after Covid-19
+
+For patients with a Covid-19 infection, hypoglycemia after Covid-19 is presented 
+with incidence rate where patients are censored at death or end of follow-up `r global_enddtm`.  
+
+For DKA there were 0 events for all groups so no incidence is presented. 
+
+```{r, child = "../src/outcomesaftercovid.Rmd"}
+
+```
+
+## Treatments after Covid-19
+
+For patients with a Covid-19 infection, use of the respective treatment at index 
+and with at least 5 months follow-up after Covid-19 the % of patients with at least 1 prescription within 5 months after Covid-19 
+of the respective treatment was calculated. 
+Note that this will be a biased, since all patients who died within 5 months will be excluded. 
+Also note that there will always be a certain % who discontinue, regardless of Covid-19 infection. 
+
+```{r, child = "../src/treatuseaftercovid.Rmd"}
+
+```
+
 \clearpage
 \newpage
 

@@ -1,0 +1,26 @@
+```{r treatuseaftercovid}
+
+dsfunc <- function(treat) {
+  tmp <- pop %>%
+    filter(!is.na(!!sym(treat))) %>%
+    count(!!sym(treat)) %>%
+    mutate(
+      per = dF(n / sum(n) * 100, 1),
+      np = paste0(n, " (", per, "%)")
+    ) %>%
+    filter(!!sym(treat) == "Yes")
+
+  out <- tibble(treat = treat, np = tmp %>% pull(np))
+}
+
+ds <- dsfunc("sos_ddr_postcovid_sglt2i")
+ds <- bind_rows(ds, dsfunc("sos_ddr_postcovid_glp1a"))
+ds <- bind_rows(ds, dsfunc("sos_ddr_postcovid_dpp4i"))
+
+colnames(ds) <- c("Treatment", "N (%) still on treatment after Covid-19")
+
+mykable(ds,
+  caption = "Treatment after Covid-19",
+  scale_down = FALSE
+)
+```

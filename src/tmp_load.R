@@ -47,7 +47,6 @@ source("./munge/07-createvars.R")
 source("./munge/08-vars.R")
 source("./munge/09-ps.R")
 
-
 ProjectTemplate::cache("flow")
 ProjectTemplate::cache("pop")
 ProjectTemplate::cache("metalm")
@@ -60,6 +59,24 @@ ProjectTemplate::cache("modvarsns")
 ProjectTemplate::cache("match_sglt2i")
 ProjectTemplate::cache("match_glp1a")
 ProjectTemplate::cache("match_dpp4i")
+
+ProjectTemplate::cache("match_sglt2i_cov")
+ProjectTemplate::cache("match_glp1a_cov")
+ProjectTemplate::cache("match_dpp4i_cov")
+
+# Rev comments so assuming all data cached previously
+ProjectTemplate::reload.project()
+
+# run 10-11 (rev comment)
+load("./data/rawData_sos_lmsglt2_postc.RData")
+source("./munge/10-sos_lm_postcovid.R")
+rm(lmsglt2_postc)
+
+load("./data/rawData_sos_patreg.RData")
+source("./munge/11-sos_outcom_postcovid.R")
+
+ProjectTemplate::cache("pop")
+ProjectTemplate::cache("metaout")
 
 ProjectTemplate::cache("match_sglt2i_cov")
 ProjectTemplate::cache("match_glp1a_cov")

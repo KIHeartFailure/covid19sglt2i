@@ -89,6 +89,19 @@ save(file = "./data/rawData_sos_lmsglt2.RData", "lmsglt2")
 
 rm(lmsglt2)
 
+# sglt2 after covid for rev -----------------------------------------------
+
+lmsglt2_postc <- readdata_sas(path = sospath2021, filename = "r_lmed_18194_2020", clean = FALSE)
+
+lmsglt2_postc <- lmsglt2_postc %>%
+  mutate(
+    atcneed = stringr::str_detect(ATC, "^A10")
+  ) %>%
+  filter(atcneed)
+
+lmsglt2_postc <- lmsglt2_postc %>% filter(AR %in% c(2020, 2021))
+save(file = "./data/rawData_sos_lmsglt2_postc.RData", "lmsglt2_postc")
+
 ## Death -----------------------------------------------------------------
 
 dors <- readdata_sas(path = sospath2021, filename = "r_dors__18194_2020", clean = FALSE, checkdups = TRUE)

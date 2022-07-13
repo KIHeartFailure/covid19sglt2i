@@ -1,0 +1,51 @@
+```{r outcomeseaftercovid}
+
+incfunc <- function(treat, event, time, data) {
+  ev <- data %>%
+    group_by(!!sym(treat)) %>%
+    summarise(
+      ev = sum(!!sym(event) == "yes", na.rm = T),
+      .groups = "rowwise"
+    )
+
+  s <- data %>%
+    group_by(!!sym(treat)) %>%
+    summarise(
+      s = sum(!!sym(time) / 365.25, na.rm = T),
+      .groups = "rowwise"
+    )
+  r <- pois.exact(x = ev$ev, pt = s$s / 1000)
+
+  out <- data.frame(matrix(NA, ncol = 2, nrow = 1))
+  out[, 1:2] <- paste0(
+    ev$ev, ", ",
+    dF(s$s, dig = 0), ", ",
+    dF(r$rate, dig = 0), " (",
+    dF(r$lower, dig = 0), "-",
+    dF(r$upper, dig = 0), ")"
+  )
+  colnames(out) <- levels(data %>% pull(treat))
+  return(out)
+}
+incfunc2 <- function(treat2, data2, event2 = "sos_out_hypoglycemia", time2 = "sos_outtime_hypoglycemia") {
+  all <- incfunc(treat = treat2, event = event2, time = time2, data = pop %>% filter(sos_out_hospcovidconfirmed == "Yes"))
+  match <- incfunc(treat = treat2, event = event2, time = time2, data = data2)
+
+  out <- bind_cols(treatname = treat2, all, match)
+}
+
+ds <- incfunc2("sos_ddr_sglt2i", match_sglt2i_cov)
+ds <- bind_rows(ds, incfunc2("sos_ddr_glp1a", match_glp1a_cov))
+ds <- bind_rows(ds, incfunc2("sos_ddr_dpp4i", match_dpp4i_cov))
+
+colnames(ds) <- c("Treatment", rep(c("No", "Yes"), 2))
+
+footnote(mykable(ds,
+  caption = "Hypoglycemia after Covid-19",
+  scale_down = FALSE
+) %>%
+  add_header_above(c(" " = 1, "On respective treatment" = 4)) %>%
+  add_header_above(c(" " = 1, "Overall" = 2, "Matched" = 2)),
+general = "No events, sum py, incidence rate / 1000 py (95% CI)"
+)
+```
