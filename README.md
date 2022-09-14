@@ -1,6 +1,6 @@
 # R code for the project covid19 and sglt2
 
-The aim of this R code is to be transparant and document the data handling 
+The aim of this R code is to be transparent and document the data handling 
 and statistical analyses performed for the project.
 
 ## Language 
